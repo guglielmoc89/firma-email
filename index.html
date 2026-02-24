@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Signature Generator — Willab Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f7f7;
+    --surface: #ffffff;
+    --border: #e4e4e4;
+    --border-strong: #c8c8c8;
+    --text: #111111;
+    --text-mid: #555555;
+    --text-muted: #999999;
+    --focus-ring: rgba(0,0,0,0.1);
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+  /* HEADER */
+  header {
+    background: #111111;
+    padding: 0 40px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .willab-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+  .hdivider { width: 1px; height: 16px; background: #2e2e2e; }
+  .tool-name { font-size: 0.76rem; color: #888; }
+  .badge { font-size: 0.65rem; color: #666; border: 1px solid #2e2e2e; padding: 2px 8px; border-radius: 20px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  /* LAYOUT */
+  .layout { display: grid; grid-template-columns: 390px 1fr; min-height: calc(100vh - 56px); }
+
+  /* PANEL */
+  .panel { background: var(--surface); border-right: 1px solid var(--border); padding: 28px 24px; overflow-y: auto; max-height: calc(100vh - 56px); }
+  .sec { font-size: 0.64rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin: 26px 0 11px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .sec:first-child { margin-top: 0; }
+  .fields { display: flex; flex-direction: column; gap: 9px; }
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  label { font-size: 0.73rem; font-weight: 500; color: var(--text-mid); }
+  input[type="text"], input[type="url"], input[type="tel"], input[type="email"] {
+    width: 100%; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-family: 'Inter', sans-serif; font-size: 0.83rem;
+    background: var(--bg); color: var(--text); outline: none;
+    transition: border-color 0.12s, box-shadow 0.12s;
+  }
+  input:focus { border-color: var(--text); box-shadow: 0 0 0 3px var(--focus-ring); background: #fff; }
+  input[type="color"] { padding: 2px 4px; height: 35px; width: 38px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; background: var(--bg); outline: none; }
+  .color-row { display: flex; align-items: center; gap: 8px; }
+  .color-row input[type="text"] { flex: 1; }
+
+  /* Logo upload */
+  .logo-up {
+    border: 1px dashed var(--border-strong); border-radius: var(--radius);
+    padding: 18px 14px; text-align: center; cursor: pointer;
+    position: relative; background: var(--bg);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .logo-up:hover { border-color: var(--text); background: #f0f0f0; }
+  .logo-up input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .up-hint { font-size: 0.74rem; color: var(--text-muted); line-height: 1.6; }
+  .logo-sm { max-height: 42px; max-width: 120px; object-fit: contain; margin: 0 auto; display: block; }
+
+  /* Social */
+  .soc-field {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--bg);
+    transition: border-color 0.12s;
+  }
+  .soc-field:focus-within { border-color: var(--text); box-shadow: 0 0 0 3px var(--focus-ring); background: #fff; }
+  .soc-field input { border: none; background: transparent; padding: 0; font-family: 'Inter', sans-serif; font-size: 0.81rem; flex: 1; color: var(--text); outline: none; }
+  .soc-field input::placeholder { color: #bbb; }
+  .si { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+  /* PREVIEW */
+  .preview-area { padding: 28px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; max-height: calc(100vh - 56px); }
+  .prev-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .prev-bar { background: #f9f9f9; border-bottom: 1px solid var(--border); padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .dots { display: flex; gap: 4px; }
+  .dots span { width: 9px; height: 9px; border-radius: 50%; background: #ddd; }
+  .prev-label { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; }
+  .live-pill { font-size: 0.62rem; background: #eee; color: #999; padding: 2px 7px; border-radius: 20px; }
+  .prev-body { padding: 24px 28px; min-height: 90px; }
+
+  /* Buttons */
+  .actions { display: flex; gap: 7px; flex-wrap: wrap; }
+  .btn { padding: 9px 16px; border-radius: var(--radius); border: none; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.12s; display: flex; align-items: center; gap: 6px; }
+  .btn-primary { background: #111; color: #fff; }
+  .btn-primary:hover { background: #333; }
+  .btn-ghost { background: #fff; color: var(--text); border: 1px solid var(--border-strong); }
+  .btn-ghost:hover { border-color: var(--text); }
+
+  /* Code */
+  .code-card { background: #181818; border-radius: var(--radius); overflow: hidden; }
+  .code-bar { padding: 8px 13px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #242424; }
+  .code-bar span { font-size: 0.7rem; color: #555; font-family: monospace; }
+  #html-output { display: block; padding: 13px; color: #aaa; font-family: 'Menlo','Monaco','Consolas',monospace; font-size: 0.7rem; line-height: 1.65; max-height: 175px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+
+  /* Instructions */
+  .instr { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+  .instr-ttl { font-size: 0.66rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 13px; }
+  .tabs { display: flex; gap: 5px; margin-bottom: 14px; }
+  .tab { padding: 5px 11px; border-radius: 5px; border: 1px solid var(--border); font-size: 0.74rem; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text-mid); transition: all 0.12s; }
+  .tab.active { background: #111; color: #fff; border-color: #111; }
+  .steps ol { padding-left: 16px; }
+  .steps li { font-size: 0.79rem; color: var(--text-mid); line-height: 1.8; }
+  .steps li strong { color: var(--text); }
+
+  /* Footer */
+  .foot { font-size: 0.68rem; color: #ccc; display: flex; align-items: center; gap: 5px; padding-bottom: 4px; }
+  .foot strong { color: #999; font-weight: 500; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 20px; right: 20px; background: #111; color: #fff; padding: 10px 16px; border-radius: var(--radius); font-size: 0.8rem; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transform: translateY(46px); opacity: 0; transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; z-index: 100; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 840px) {
+    .layout { grid-template-columns: 1fr; }
+    .panel { max-height: none; border-right: none; border-bottom: 1px solid var(--border); }
+    .preview-area { max-height: none; }
+    header { padding: 0 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <a class="willab-logo" href="#">
+      <svg height="22" viewBox="0 0 1366 768" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+        <path fill="#fff" d="M323.96,270.44l32.5-111.01h57.67l-57.47,171h-65.21l-30.72-108.02-29.73,108.02h-68.57l-57.47-171h62.63l33.49,112.85,29.53-112.85h63.42l29.93,111.01Z"/>
+        <path fill="#fff" d="M419.88,330.43v-171h56.08v171h-56.08Z"/>
+        <path fill="#fff" d="M550.09,159.43v122.04h102.26v48.95h-158.55v-171h56.28Z"/>
+        <path fill="#fff" d="M722.32,159.43v122.04h102.26v48.95h-158.55v-171h56.28Z"/>
+        <path fill="#fff" d="M980.16,302.85h-84.23l-11.3,27.58h-57.08l72.93-171h75.71l77.09,171h-61.64l-11.5-27.58ZM962.12,260.1l-24.77-58.84-24.18,58.84h48.95Z"/>
+        <path fill="#fff" d="M1197.18,159.43c43.01,0,54.5,19.08,54.5,38.84v2.53c0,21.15-15.66,31.03-25.37,33.56,13.08,3.45,33.89,13.79,33.89,43.9v2.76c0,26.89-14.27,49.41-62.23,49.41h-139.52v-171h138.73ZM1114.73,222.41h65.4c11.69,0,15.06-5.52,15.06-11.95v-.46c0-6.9-3.37-11.72-15.06-11.72h-65.4v24.13ZM1114.73,290.21h68.97c14.67,0,17.44-8.05,17.44-14.71v-.69c0-7.13-2.97-14.02-17.44-14.02h-68.97v29.42Z"/>
+        <path fill="#fff" d="M304.34,486.24v1.84h-61.24c-.59-6.21-3.77-18.16-35.67-18.16h-1.98c-29.53,0-32.5,5.98-32.5,12.64v.23c0,6.89,4.36,12.64,32.11,13.1l26.56.69c56.08,1.61,77.89,17.24,77.89,51.48v3.22c0,28.96-13.87,58.15-91.36,58.15h-18.04c-81.45,0-89.98-38.38-89.98-60.68v-2.3h61.83c.59,9.19,4.76,24.13,36.86,24.13h1.78c31.51,0,36.07-7.81,36.07-16.09v-.23c0-8.5-3.57-14.48-34.68-15.4l-27.35-.92c-57.08-2.07-72.34-24.82-72.34-51.48v-2.07c0-27.81,16.25-52.17,84.82-52.17h17.64c72.93,0,89.58,26.89,89.58,54.01Z"/>
+        <path fill="#fff" d="M375.09,606.21v-124.34h-63.62v-46.66h183.52v46.66h-63.62v124.34h-56.29Z"/>
+        <path fill="#fff" d="M506.89,435.21h56.49v76.53c0,20.92,7.92,45.97,45.18,45.97s44.99-25.05,44.99-45.97v-76.53h56.28v81.59c0,33.1-13.48,92.16-97.11,92.16h-7.93c-85.81,0-97.91-59.07-97.91-92.16v-81.59Z"/>
+        <path fill="#fff" d="M830.73,435.21c85.02,0,106.43,40.45,106.43,80.9v6.9c0,38.84-18.43,83.43-106.23,83.2h-104.84v-171h104.64ZM824.19,560.93c48.95,0,54.5-25.05,54.5-39.99v-1.38c0-14.94-5.35-39.53-54.5-39.53h-41.82v80.9h41.82Z"/>
+        <path fill="#fff" d="M949.45,606.21v-171h56.08v171h-56.08Z"/>
+        <path fill="#fff" d="M1242.37,516.81v6.89c0,31.95-12.09,85.73-107.42,85.73h-8.92c-95.53,0-107.62-53.78-107.62-85.73v-6.89c0-32.41,12.09-84.81,107.62-84.81h8.92c95.13,0,107.42,52.4,107.42,84.81ZM1076.68,518.41v2.76c0,17.93,10.11,42.06,53.71,42.06s53.71-23.44,53.71-41.6v-3.22c0-18.16-9.91-40.45-53.71-40.45s-53.71,22.29-53.71,40.45Z"/>
+      </svg>
+    </a>
+    <div class="hdivider"></div>
+    <span class="tool-name">Email Signature Generator</span>
+  </div>
+  <span class="badge">Free Tool</span>
+</header>
+
+<div class="layout">
+
+  <!-- FORM -->
+  <div class="panel">
+
+    <div class="sec">Dati personali</div>
+    <div class="fields">
+      <div class="field"><label>Nome completo</label><input type="text" id="f-name" placeholder="Mario Rossi" oninput="update()"></div>
+      <div class="field"><label>Ruolo</label><input type="text" id="f-role" placeholder="Responsabile Marketing" oninput="update()"></div>
+      <div class="field"><label>Telefono</label><input type="tel" id="f-phone" placeholder="+39 02 1234567" oninput="update()"></div>
+      <div class="field"><label>Email</label><input type="email" id="f-email" placeholder="mario@azienda.it" oninput="update()"></div>
+    </div>
+
+    <div class="sec">Azienda</div>
+    <div class="fields">
+      <div class="field"><label>Nome azienda</label><input type="text" id="f-company" placeholder="Azienda Srl" oninput="update()"></div>
+      <div class="field"><label>Sito web</label><input type="url" id="f-website" placeholder="https://www.azienda.it" oninput="update()"></div>
+      <div class="field"><label>Indirizzo</label><input type="text" id="f-address" placeholder="Via Roma 1, Milano" oninput="update()"></div>
+    </div>
+
+    <div class="sec">Logo aziendale</div>
+    <div class="logo-up">
+      <input type="file" id="f-logo" accept="image/*" onchange="handleLogo(this)">
+      <div id="logo-ph">
+        <div style="font-size:1.3rem;margin-bottom:4px;color:#bbb;">↑</div>
+        <div class="up-hint">Clicca per caricare<br>PNG · JPG · SVG</div>
+      </div>
+    </div>
+
+    <div class="sec">Colore accento</div>
+    <div class="color-row">
+      <input type="color" id="f-color" value="#111111" oninput="update()">
+      <input type="text" id="f-color-hex" value="#111111" placeholder="#111111" oninput="syncColor(this)">
+    </div>
+
+    <div class="sec">Social — visibile solo se inserisci il link</div>
+    <div class="fields">
+      <div class="soc-field">
+        <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></span>
+        <input type="url" id="f-youtube" placeholder="YouTube" oninput="update()">
+      </div>
+      <div class="soc-field">
+        <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></span>
+        <input type="url" id="f-facebook" placeholder="Facebook" oninput="update()">
+      </div>
+      <div class="soc-field">
+        <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E1306C" stroke-width="2.2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.1" fill="#E1306C" stroke="none"/></svg></span>
+        <input type="url" id="f-instagram" placeholder="Instagram" oninput="update()">
+      </div>
+      <div class="soc-field">
+        <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="#E60023"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg></span>
+        <input type="url" id="f-pinterest" placeholder="Pinterest" oninput="update()">
+      </div>
+      <div class="soc-field">
+        <span class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="#0A66C2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7H10v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></span>
+        <input type="url" id="f-linkedin" placeholder="LinkedIn" oninput="update()">
+      </div>
+      <div class="soc-field">
+        <span class="si"><svg width="12" height="12" viewBox="0 0 24 24" fill="#111"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
+        <input type="url" id="f-twitter" placeholder="X / Twitter" oninput="update()">
+      </div>
+      <div class="soc-field">
+        <span class="si"><svg width="12" height="12" viewBox="0 0 24 24" fill="#111"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/></svg></span>
+        <input type="url" id="f-tiktok" placeholder="TikTok" oninput="update()">
+      </div>
+    </div>
+
+    <div style="margin-top:28px;padding-top:18px;border-top:1px solid var(--border);">
+      <div class="foot">
+        <svg height="14" viewBox="0 0 1366 768" xmlns="http://www.w3.org/2000/svg" style="display:block;opacity:0.35;">
+          <path d="M323.96,270.44l32.5-111.01h57.67l-57.47,171h-65.21l-30.72-108.02-29.73,108.02h-68.57l-57.47-171h62.63l33.49,112.85,29.53-112.85h63.42l29.93,111.01Z"/>
+          <path d="M419.88,330.43v-171h56.08v171h-56.08Z"/>
+          <path d="M550.09,159.43v122.04h102.26v48.95h-158.55v-171h56.28Z"/>
+          <path d="M722.32,159.43v122.04h102.26v48.95h-158.55v-171h56.28Z"/>
+          <path d="M980.16,302.85h-84.23l-11.3,27.58h-57.08l72.93-171h75.71l77.09,171h-61.64l-11.5-27.58ZM962.12,260.1l-24.77-58.84-24.18,58.84h48.95Z"/>
+          <path d="M1197.18,159.43c43.01,0,54.5,19.08,54.5,38.84v2.53c0,21.15-15.66,31.03-25.37,33.56,13.08,3.45,33.89,13.79,33.89,43.9v2.76c0,26.89-14.27,49.41-62.23,49.41h-139.52v-171h138.73ZM1114.73,222.41h65.4c11.69,0,15.06-5.52,15.06-11.95v-.46c0-6.9-3.37-11.72-15.06-11.72h-65.4v24.13ZM1114.73,290.21h68.97c14.67,0,17.44-8.05,17.44-14.71v-.69c0-7.13-2.97-14.02-17.44-14.02h-68.97v29.42Z"/>
+          <path d="M304.34,486.24v1.84h-61.24c-.59-6.21-3.77-18.16-35.67-18.16h-1.98c-29.53,0-32.5,5.98-32.5,12.64v.23c0,6.89,4.36,12.64,32.11,13.1l26.56.69c56.08,1.61,77.89,17.24,77.89,51.48v3.22c0,28.96-13.87,58.15-91.36,58.15h-18.04c-81.45,0-89.98-38.38-89.98-60.68v-2.3h61.83c.59,9.19,4.76,24.13,36.86,24.13h1.78c31.51,0,36.07-7.81,36.07-16.09v-.23c0-8.5-3.57-14.48-34.68-15.4l-27.35-.92c-57.08-2.07-72.34-24.82-72.34-51.48v-2.07c0-27.81,16.25-52.17,84.82-52.17h17.64c72.93,0,89.58,26.89,89.58,54.01Z"/>
+          <path d="M375.09,606.21v-124.34h-63.62v-46.66h183.52v46.66h-63.62v124.34h-56.29Z"/>
+          <path d="M506.89,435.21h56.49v76.53c0,20.92,7.92,45.97,45.18,45.97s44.99-25.05,44.99-45.97v-76.53h56.28v81.59c0,33.1-13.48,92.16-97.11,92.16h-7.93c-85.81,0-97.91-59.07-97.91-92.16v-81.59Z"/>
+          <path d="M830.73,435.21c85.02,0,106.43,40.45,106.43,80.9v6.9c0,38.84-18.43,83.43-106.23,83.2h-104.84v-171h104.64ZM824.19,560.93c48.95,0,54.5-25.05,54.5-39.99v-1.38c0-14.94-5.35-39.53-54.5-39.53h-41.82v80.9h41.82Z"/>
+          <path d="M949.45,606.21v-171h56.08v171h-56.08Z"/>
+          <path d="M1242.37,516.81v6.89c0,31.95-12.09,85.73-107.42,85.73h-8.92c-95.53,0-107.62-53.78-107.62-85.73v-6.89c0-32.41,12.09-84.81,107.62-84.81h8.92c95.13,0,107.42,52.4,107.42,84.81ZM1076.68,518.41v2.76c0,17.93,10.11,42.06,53.71,42.06s53.71-23.44,53.71-41.6v-3.22c0-18.16-9.91-40.45-53.71-40.45s-53.71,22.29-53.71,40.45Z"/>
+        </svg>
+        <span style="color:#bbb;font-size:0.68rem;">Un tool gratuito di Willab Studio</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview-area">
+
+    <div class="prev-card">
+      <div class="prev-bar">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="prev-label">Anteprima firma</span>
+        <span class="live-pill">live</span>
+      </div>
+      <div class="prev-body"><div id="sig-preview"></div></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="copyRich()">Copia firma</button>
+      <button class="btn btn-ghost" onclick="copyHTML()">Copia HTML</button>
+      <button class="btn btn-ghost" onclick="downloadHTML()">↓ Scarica HTML</button>
+    </div>
+
+    <div class="code-card">
+      <div class="code-bar">
+        <span>output.html — Gmail · Outlook</span>
+        <button class="btn btn-ghost" onclick="copyHTML()" style="padding:3px 10px;font-size:0.7rem;">Copia</button>
+      </div>
+      <code id="html-output"></code>
+    </div>
+
+    <div class="instr">
+      <div class="instr-ttl">Come inserire la firma</div>
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('gmail',this)">Gmail</div>
+        <div class="tab" onclick="showTab('outlook',this)">Outlook Web</div>
+        <div class="tab" onclick="showTab('outlook-d',this)">Outlook Desktop</div>
+      </div>
+      <div class="steps" id="t-gmail">
+        <ol>
+          <li>Clicca <strong>"Copia firma"</strong> qui sopra</li>
+          <li>Vai su <strong>Gmail → Impostazioni ⚙️ → Tutte le impostazioni → Firma</strong></li>
+          <li>Crea una nuova firma e incolla con <strong>Ctrl+V / Cmd+V</strong></li>
+          <li>Salva le modifiche in fondo alla pagina</li>
+        </ol>
+      </div>
+      <div class="steps" id="t-outlook" style="display:none">
+        <ol>
+          <li>Clicca <strong>"Copia HTML"</strong></li>
+          <li>Vai su <strong>Outlook Web → Impostazioni ⚙️ → Posta → Scrivi e rispondi</strong></li>
+          <li>Apri l'editor sorgente <strong>&lt;/&gt;</strong> e incolla il codice</li>
+          <li>Salva</li>
+        </ol>
+      </div>
+      <div class="steps" id="t-outlook-d" style="display:none">
+        <ol>
+          <li>Clicca <strong>"Copia firma"</strong></li>
+          <li>In Outlook: <strong>File → Opzioni → Posta → Firme</strong></li>
+          <li>Crea una nuova firma e incolla nel campo testo</li>
+          <li>Imposta come predefinita e clicca <strong>OK</strong></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="foot">
+      <svg height="13" viewBox="0 0 1366 768" xmlns="http://www.w3.org/2000/svg" style="display:block;opacity:0.25;">
+        <path d="M323.96,270.44l32.5-111.01h57.67l-57.47,171h-65.21l-30.72-108.02-29.73,108.02h-68.57l-57.47-171h62.63l33.49,112.85,29.53-112.85h63.42l29.93,111.01Z"/>
+        <path d="M419.88,330.43v-171h56.08v171h-56.08Z"/>
+        <path d="M550.09,159.43v122.04h102.26v48.95h-158.55v-171h56.28Z"/>
+        <path d="M722.32,159.43v122.04h102.26v48.95h-158.55v-171h56.28Z"/>
+        <path d="M980.16,302.85h-84.23l-11.3,27.58h-57.08l72.93-171h75.71l77.09,171h-61.64l-11.5-27.58ZM962.12,260.1l-24.77-58.84-24.18,58.84h48.95Z"/>
+        <path d="M1197.18,159.43c43.01,0,54.5,19.08,54.5,38.84v2.53c0,21.15-15.66,31.03-25.37,33.56,13.08,3.45,33.89,13.79,33.89,43.9v2.76c0,26.89-14.27,49.41-62.23,49.41h-139.52v-171h138.73ZM1114.73,222.41h65.4c11.69,0,15.06-5.52,15.06-11.95v-.46c0-6.9-3.37-11.72-15.06-11.72h-65.4v24.13ZM1114.73,290.21h68.97c14.67,0,17.44-8.05,17.44-14.71v-.69c0-7.13-2.97-14.02-17.44-14.02h-68.97v29.42Z"/>
+        <path d="M304.34,486.24v1.84h-61.24c-.59-6.21-3.77-18.16-35.67-18.16h-1.98c-29.53,0-32.5,5.98-32.5,12.64v.23c0,6.89,4.36,12.64,32.11,13.1l26.56.69c56.08,1.61,77.89,17.24,77.89,51.48v3.22c0,28.96-13.87,58.15-91.36,58.15h-18.04c-81.45,0-89.98-38.38-89.98-60.68v-2.3h61.83c.59,9.19,4.76,24.13,36.86,24.13h1.78c31.51,0,36.07-7.81,36.07-16.09v-.23c0-8.5-3.57-14.48-34.68-15.4l-27.35-.92c-57.08-2.07-72.34-24.82-72.34-51.48v-2.07c0-27.81,16.25-52.17,84.82-52.17h17.64c72.93,0,89.58,26.89,89.58,54.01Z"/>
+        <path d="M375.09,606.21v-124.34h-63.62v-46.66h183.52v46.66h-63.62v124.34h-56.29Z"/>
+        <path d="M506.89,435.21h56.49v76.53c0,20.92,7.92,45.97,45.18,45.97s44.99-25.05,44.99-45.97v-76.53h56.28v81.59c0,33.1-13.48,92.16-97.11,92.16h-7.93c-85.81,0-97.91-59.07-97.91-92.16v-81.59Z"/>
+        <path d="M830.73,435.21c85.02,0,106.43,40.45,106.43,80.9v6.9c0,38.84-18.43,83.43-106.23,83.2h-104.84v-171h104.64ZM824.19,560.93c48.95,0,54.5-25.05,54.5-39.99v-1.38c0-14.94-5.35-39.53-54.5-39.53h-41.82v80.9h41.82Z"/>
+        <path d="M949.45,606.21v-171h56.08v171h-56.08Z"/>
+        <path d="M1242.37,516.81v6.89c0,31.95-12.09,85.73-107.42,85.73h-8.92c-95.53,0-107.62-53.78-107.62-85.73v-6.89c0-32.41,12.09-84.81,107.62-84.81h8.92c95.13,0,107.42,52.4,107.42,84.81ZM1076.68,518.41v2.76c0,17.93,10.11,42.06,53.71,42.06s53.71-23.44,53.71-41.6v-3.22c0-18.16-9.91-40.45-53.71-40.45s-53.71,22.29-53.71,40.45Z"/>
+      </svg>
+      <span style="color:#ccc;font-size:0.68rem;">Fatto con cura da Willab Studio · willabstudio.com</span>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">Copiato</div>
+
+<script>
+let logoData = '';
+
+function handleLogo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    logoData = e.target.result;
+    document.getElementById('logo-ph').innerHTML = `<img src="${logoData}" class="logo-sm">`;
+    update();
+  };
+  reader.readAsDataURL(file);
+}
+
+function syncColor(el) {
+  if (/^#[0-9a-fA-F]{6}$/.test(el.value)) {
+    document.getElementById('f-color').value = el.value;
+    update();
+  }
+}
+
+function g(id) { return document.getElementById(id).value.trim(); }
+
+function generateHTML() {
+  const name      = g('f-name');
+  const role      = g('f-role');
+  const phone     = g('f-phone');
+  const email     = g('f-email');
+  const company   = g('f-company');
+  const website   = g('f-website');
+  const address   = g('f-address');
+  const color     = g('f-color') || '#111111';
+  const youtube   = g('f-youtube');
+  const facebook  = g('f-facebook');
+  const instagram = g('f-instagram');
+  const pinterest = g('f-pinterest');
+  const linkedin  = g('f-linkedin');
+  const twitter   = g('f-twitter');
+  const tiktok    = g('f-tiktok');
+
+  const hasSocials = youtube||facebook||instagram||pinterest||linkedin||twitter||tiktok;
+
+  const logoCol = logoData ? `
+    <td style="padding-right:15px;vertical-align:middle;">
+      <img src="${logoData}" alt="${company}" style="max-height:46px;max-width:115px;display:block;object-fit:contain;">
+    </td>
+    <td style="padding-right:15px;vertical-align:middle;">
+      <div style="width:1px;height:46px;background:#e4e4e4;"></div>
+    </td>` : '';
+
+  const socs = [];
+  if(youtube)   socs.push({u:youtube,   l:'YouTube',  bg:'#FF0000', s:`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`});
+  if(facebook)  socs.push({u:facebook,  l:'Facebook', bg:'#1877F2', s:`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`});
+  if(instagram) socs.push({u:instagram, l:'Instagram',bg:'#E1306C', s:`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none"/></svg>`});
+  if(pinterest) socs.push({u:pinterest, l:'Pinterest',bg:'#E60023', s:`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>`});
+  if(linkedin)  socs.push({u:linkedin,  l:'LinkedIn', bg:'#0A66C2', s:`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7H10v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>`});
+  if(twitter)   socs.push({u:twitter,   l:'X',        bg:'#111111', s:`<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`});
+  if(tiktok)    socs.push({u:tiktok,    l:'TikTok',   bg:'#111111', s:`<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="#fff"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/></svg>`});
+
+  const socRow = hasSocials ? `<tr><td colspan="3" style="padding-top:10px;">
+    <table cellpadding="0" cellspacing="0"><tr>
+      ${socs.map(s=>`<td style="padding-right:5px;"><a href="${s.u}" target="_blank" title="${s.l}" style="display:inline-flex;align-items:center;justify-content:center;width:23px;height:23px;border-radius:5px;background:${s.bg};text-decoration:none;">${s.s}</a></td>`).join('')}
+    </tr></table>
+  </td></tr>` : '';
+
+  return `<table cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#111111;border-top:1.5px solid ${color};padding-top:13px;max-width:500px;">
+  <tr>
+    ${logoCol}
+    <td style="vertical-align:top;">
+      <table cellpadding="0" cellspacing="0">
+        <tr><td>
+          <span style="font-size:13.5px;font-weight:600;color:${color};">${name||'Nome Cognome'}</span>${role?`<span style="color:#999;font-size:12px;"> &middot; ${role}</span>`:''}
+        </td></tr>
+        ${company?`<tr><td style="padding-top:2px;font-size:12px;color:#555;font-weight:500;">${website?`<a href="${website}" style="color:#555;text-decoration:none;">${company}</a>`:company}</td></tr>`:''}
+        ${(phone||email||address)?`<tr><td style="padding-top:6px;font-size:11.5px;color:#777;line-height:1.7;">
+          ${phone?`<a href="tel:${phone}" style="color:#777;text-decoration:none;">${phone}</a>`:''}${phone&&email?' &nbsp;&middot;&nbsp; ':''}${email?`<a href="mailto:${email}" style="color:${color};text-decoration:none;">${email}</a>`:''}
+          ${address?`<br>${address}`:''}
+        </td></tr>`:''}
+        ${socRow}
+      </table>
+    </td>
+  </tr>
+</table>`;
+}
+
+function update() {
+  const html = generateHTML();
+  document.getElementById('sig-preview').innerHTML = html;
+  document.getElementById('html-output').textContent = html;
+  document.getElementById('f-color-hex').value = document.getElementById('f-color').value;
+}
+
+function copyHTML() {
+  navigator.clipboard.writeText(generateHTML()).then(()=>toast('HTML copiato'));
+}
+
+function copyRich() {
+  const html = generateHTML();
+  try {
+    const rc = new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([html],{type:'text/plain'})});
+    navigator.clipboard.write([rc]).then(()=>toast('Firma copiata'));
+  } catch(e) {
+    const el = document.createElement('div');
+    el.innerHTML = html;
+    el.style.cssText = 'position:fixed;left:-9999px;top:0';
+    document.body.appendChild(el);
+    const r = document.createRange(); r.selectNodeContents(el);
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    document.execCommand('copy'); s.removeAllRanges();
+    document.body.removeChild(el);
+    toast('Firma copiata');
+  }
+}
+
+function downloadHTML() {
+  const a = document.createElement('a');
+  a.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(generateHTML());
+  a.download = 'firma-email.html'; a.click();
+  toast('File scaricato');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+function showTab(tab, el) {
+  ['gmail','outlook','outlook-d'].forEach(id=>{
+    document.getElementById('t-'+id).style.display = id===tab?'block':'none';
+  });
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+update();
+</script>
+</body>
+</html>
